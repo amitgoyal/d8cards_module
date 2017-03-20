@@ -1,0 +1,15 @@
+d8cards.hello:
+  path: '/d8cards/hello'
+  defaults:
+    _controller: '\Drupal\d8cards\Controller\D8cardsController::hello'
+    _title: 'Hello World'
+  requirements:
+    _permission: 'access content'
+
+d8cards.config:
+  path: '/d8cards/config'
+  defaults:
+    _form: '\Drupal\d8cards\Form\ConfigurationForm'
+    _title: 'Configuration Form'
+  requirements:
+    _permission: 'access content'

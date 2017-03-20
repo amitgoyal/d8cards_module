@@ -1,0 +1,51 @@
+<?php
+/**
+ * @file
+ * D8cards Module.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Queue\QueueFactory;
+use Drupal\Core\Queue\QueueInterface;
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Cleans up config entities installed by this module.
+ */
+function d8cards_uninstall() {
+  db_query("DELETE FROM {config} WHERE name LIKE '%migrate_plus.migration.actors%'");
+  db_query("DELETE FROM {config} WHERE name LIKE '%migrate_plus.migration.movies%'");
+  drupal_flush_all_caches();
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function d8cards_entity_insert(EntityInterface $entity) {
+  if ($entity->getEntityTypeId() !== 'node') {
+    return;
+  }
+
+  if ($entity->isPublished()) {
+    return;
+  }
+
+  /** @var QueueFactory $queue_factory */
+  $queue_factory = \Drupal::service('queue');
+  /** @var QueueInterface $queue */
+  $queue = $queue_factory->get('cron_node_publisher');
+
+  $item = new stdClass();
+  $item->nid = $entity->id();
+  $queue->createItem($item);
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function d8cards_entity_update(EntityInterface $entity) {
+  \Drupal::logger('Node updates')->notice(
+    'Node with title %title of type %type has been updated.', array('%title' => $entity->label(), '%type' => $entity->bundle())
+  );
+}
